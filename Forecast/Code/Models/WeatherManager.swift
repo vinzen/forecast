@@ -9,6 +9,9 @@
 import CoreData
 import Foundation
 
+/**
+ Creates or update weather's managed objects
+*/
 class WeatherManager {
     static let sharedInstance = WeatherManager()
     private lazy var validTemperature: [String] = {
@@ -20,11 +23,19 @@ class WeatherManager {
 
     private init() {}
 
-    func update(response: [String: Any], completionBlock: @escaping () -> ()) {
+    /**
+
+     Creates or updates `Weather`
+
+     - parameters:
+        - response: the Data representing all `Weather` from network call
+        - completionBlock: The block to call when it is finished
+     */
+    func update(data: [String: Any], completionBlock: @escaping () -> ()) {
         let dateFormater = DateFormatter()
         dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss"
         CoreDataStack.sharedInstance.performBackgroundTask { (context) in
-            for (key, value) in response {
+            for (key, value) in data {
                 if self.trashKeys.contains(key) { continue }
                 if let data = value as? [String: Any], let timestamp = dateFormater.date(from: key) {
                     self.createOrUpdateObject(timestamp: timestamp, data: data, context: context)
@@ -35,7 +46,15 @@ class WeatherManager {
         }
     }
 
-    func createOrUpdateObject(timestamp: Date, data: [String: Any], context: NSManagedObjectContext) {
+    /**
+
+     Creates or updates `Weather`
+
+     - parameters:
+        - timestamp: The timestamp of `Weather`
+        - context: The context where to creates or updates
+     */
+    private func createOrUpdateObject(timestamp: Date, data: [String: Any], context: NSManagedObjectContext) {
         let object: Weather
         if let weather = findObject(timestamp: timestamp, context: context) {
             object = weather
@@ -43,9 +62,20 @@ class WeatherManager {
             object = Weather(context: context)
             object.timestamp = timestamp
         }
-        updateObject(object, data: data, context: context)
+        updateWeather(object, data: data, context: context)
     }
 
+    /**
+
+     Find `Weather` corresponding to its `timestamp`
+
+     - parameters:
+        - timestamp: The timestamp of the object to find
+        - context: The context where to find
+
+     - returns:
+        The `Weather` if founded or `nil` otherwise
+     */
     private func findObject(timestamp: Date, context: NSManagedObjectContext) -> Weather? {
         do {
             let fetchRequest: NSFetchRequest<Weather> = Weather.fetchRequest()
@@ -61,29 +91,47 @@ class WeatherManager {
         return nil
     }
 
-    private func updateObject(_ object: Weather, data: [String: Any], context: NSManagedObjectContext) {
+    /**
+
+     Updates `Weather` attributes
+
+     - parameters:
+        - weather: The weather to update
+        - data: The data representing weather's attributes from network call
+        - context: The context where to create/update `weather` temperatures
+     */
+    private func updateWeather(_ weather: Weather, data: [String: Any], context: NSManagedObjectContext) {
         if let pressure = data["pression"] as? [String: Int64] {
-            object.pressure = pressure["niveau_de_la_mer"] ?? 0
+            weather.pressure = pressure["niveau_de_la_mer"] ?? 0
         } else {
-            object.pressure = 0
+            weather.pressure = 0
         }
         if let rain = data["pluie"] as? Double {
-            object.rain = rain
+            weather.rain = rain
         } else {
-            object.rain = 0
+            weather.rain = 0
         }
         if let snowRisky = data["risque_neige"] as? String {
-            object.snowRisky = snowRisky == "oui"
+            weather.snowRisky = snowRisky == "oui"
         } else {
-            object.snowRisky = false
+            weather.snowRisky = false
         }
-        updateObjectTemperature(object, data: data, context: context)
+        updateWeatherTemperature(weather, data: data, context: context)
     }
 
-    private func updateObjectTemperature(_ object: Weather, data: [String: Any], context: NSManagedObjectContext) {
+    /**
+
+     Updates `Weather` temperatures by doing the diff between `data` and `Weather` current temperatures
+
+     - parameters:
+        - weather: The `Weather` to update temperatures
+        - data: The data representing weather's temperatures from network call
+        - context: The context where to create/update temperatures
+    */
+    private func updateWeatherTemperature(_ weather: Weather, data: [String: Any], context: NSManagedObjectContext) {
         guard let temperatures = data["temperature"] as? [String: Double] else {
-            if let saveTemperatures = object.temperatures {
-                object.removeFromTemperatures(saveTemperatures)
+            if let saveTemperatures = weather.temperatures {
+                weather.removeFromTemperatures(saveTemperatures)
             }
             return
         }
@@ -91,7 +139,7 @@ class WeatherManager {
         let toAddTemperatures = NSMutableSet()
         for (kind, value) in temperatures {
             if !validTemperature.contains(kind) { continue }
-            if let temperature = object.temperatures?.first(where: { ($0 as! Temperature).kind == kind }) as? Temperature {
+            if let temperature = weather.temperatures?.first(where: { ($0 as! Temperature).kind == kind }) as? Temperature {
                 temperature.value = value
                 newOrUpdatedTemperatures.append(temperature)
             } else {
@@ -102,7 +150,7 @@ class WeatherManager {
                 toAddTemperatures.add(temperature)
             }
         }
-        if let temperatures = object.temperatures {
+        if let temperatures = weather.temperatures {
             let toRemoveTemperatures = NSMutableSet()
             for temperature in temperatures {
                 let temperature = temperature as! Temperature
@@ -110,8 +158,8 @@ class WeatherManager {
                     toRemoveTemperatures.add(temperature)
                 }
             }
-            object.removeFromTemperatures(toRemoveTemperatures)
+            weather.removeFromTemperatures(toRemoveTemperatures)
         }
-        object.addToTemperatures(toAddTemperatures)
+        weather.addToTemperatures(toAddTemperatures)
     }
 }

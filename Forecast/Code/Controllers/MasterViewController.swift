@@ -57,7 +57,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     private func refreshData() {
         APIManager.sharedInstance.fetchWeather(successBlock: { (data) in
-            WeatherManager.sharedInstance.update(response: data) {
+            WeatherManager.sharedInstance.update(data: data) {
                 DispatchQueue.main.async {
                     self.dataSource?.refresh()
                     self.tableView.reloadData()

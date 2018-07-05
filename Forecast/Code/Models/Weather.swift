@@ -9,6 +9,13 @@
 import Foundation
 
 extension Weather {
+    /**
+     Concatenates all item's attritubes into a `String`
+
+     - returns:
+     A `String` containing all item's attritubes
+     
+    */
     var debugInfo: String {
         var toto = timestamp!.description
         toto += "\n snowRisky: \(snowRisky)"

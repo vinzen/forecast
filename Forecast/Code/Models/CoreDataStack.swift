@@ -9,6 +9,9 @@
 import CoreData
 import Foundation
 
+/**
+ Core Data Wrapper
+ */
 class CoreDataStack {
     static let sharedInstance = CoreDataStack()
     private init() {}

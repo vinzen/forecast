@@ -10,6 +10,9 @@ import CoreData
 import Foundation
 
 extension NSManagedObjectContext {
+    /**
+     `Save` if `hasChanges`
+     */
     func softSave() {
         if hasChanges {
             do {
