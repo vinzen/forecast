@@ -8,28 +8,55 @@
 
 import XCTest
 
-class ForecastTests: XCTestCase {
-    
+@testable import Forecast
+
+class WeatherPresenterItemMock : WeatherPresenterItem {
+    var snowRisky = false
+    var _snowRisky: Bool {
+        return snowRisky
+    }
+
+    var _debugInfo: String {
+        return ""
+    }
+
+    var rain = 0.0
+    var _rain: Double {
+        return rain
+    }
+}
+
+class WeatherPresenterTests: XCTestCase {
+    private var presenter: WeatherPresenter?
+    private let dummyImageView = UIImageView()
+    private let dummyLabel = UILabel()
+
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        presenter = WeatherPresenter(imageView: dummyImageView, label: dummyLabel)
     }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
+
+    func testSnowImagePresentation() {
+        let weather = WeatherPresenterItemMock()
+        weather.snowRisky = true
+        XCTAssert(presenter?.getImageName(weather: weather) == "snow")
     }
-    
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+
+    func testRainImagePresentation() {
+        let weather = WeatherPresenterItemMock()
+        weather.rain = 99.0
+        XCTAssert(presenter?.getImageName(weather: weather) == "rain")
     }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+
+    func testSunImagePresentation() {
+        let weather = WeatherPresenterItemMock()
+        XCTAssert(presenter?.getImageName(weather: weather) == "sun")
     }
-    
+
+    func testPriorityImagePresentation() {
+        let weather = WeatherPresenterItemMock()
+        weather.snowRisky = true
+        weather.rain = 99.0
+        XCTAssert(presenter?.getImageName(weather: weather) == "snow")
+    }
 }

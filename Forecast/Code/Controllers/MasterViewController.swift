@@ -55,7 +55,6 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         cell.textLabel!.text = DateFormatter.localizedString(from: weather.timestamp!, dateStyle: .long, timeStyle: .short)
     }
 
-
     private func refreshData() {
         APIManager.sharedInstance.fetchWeather(successBlock: { (data) in
             WeatherManager.sharedInstance.update(response: data) {

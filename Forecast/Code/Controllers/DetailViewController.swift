@@ -11,35 +11,18 @@ import UIKit
 class DetailViewController: UIViewController {
 
     @IBOutlet weak var detailDescriptionLabel: UILabel!
+    @IBOutlet weak var imageView: UIImageView!
 
-
-    func configureView() {
-        // Update the user interface for the detail item.
-        if let detail = detailItem {
-            if let label = detailDescriptionLabel {
-                label.text = detail.timestamp!.description
-            }
-        }
-    }
+    var detailItem: Weather?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         configureView()
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-    var detailItem: Weather? {
-        didSet {
-            // Update the view.
-            configureView()
+    private func configureView() {
+        if let detail = detailItem {
+            WeatherPresenter(imageView: imageView, label: detailDescriptionLabel).bind(weather: detail)
         }
     }
-
-
 }
-

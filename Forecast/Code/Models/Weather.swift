@@ -7,3 +7,20 @@
 //
 
 import Foundation
+
+extension Weather {
+    var debugInfo: String {
+        var toto = timestamp!.description
+        toto += "\n snowRisky: \(snowRisky)"
+        toto += "\n rain: \(rain)"
+        toto += "\n pressure: \(pressure)"
+        if let temperatures = temperatures {
+            toto += "\n temperature:"
+            for temperature in temperatures {
+                let temperature = temperature as! Temperature
+                toto += "\n  \(temperature.kind!): \(temperature.value)"
+            }
+        }
+        return toto
+    }
+}
