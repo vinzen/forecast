@@ -54,8 +54,9 @@ class WeatherManager {
             if let weather = objects.first {
                 return weather
             }
-        } catch let error {
-
+        } catch {
+            let nserror = error as NSError
+            print("Unresolved error \(nserror), \(nserror.userInfo)")
         }
         return nil
     }
