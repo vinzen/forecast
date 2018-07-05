@@ -77,18 +77,41 @@ class WeatherManager {
         } else {
             object.snowRisky = false
         }
-        if let temperatures = data["temperature"] as? [String: Double] {
-            // TODO: smart update
-            if let temperatures = object.temperatures {
-                object.removeFromTemperatures(temperatures)
+        updateObjectTemperature(object, data: data, context: context)
+    }
+
+    private func updateObjectTemperature(_ object: Weather, data: [String: Any], context: NSManagedObjectContext) {
+        guard let temperatures = data["temperature"] as? [String: Double] else {
+            if let saveTemperatures = object.temperatures {
+                object.removeFromTemperatures(saveTemperatures)
             }
-            for (kind, value) in temperatures {
-                if !validTemperature.contains(kind) { continue }
-                let temp = Temperature(context: context)
-                temp.kind = kind
-                temp.value = value
-                object.addToTemperatures(temp)
+            return
+        }
+        var newOrUpdatedTemperatures = [Temperature]()
+        let toAddTemperatures = NSMutableSet()
+        for (kind, value) in temperatures {
+            if !validTemperature.contains(kind) { continue }
+            if let temperature = object.temperatures?.first(where: { ($0 as! Temperature).kind == kind }) as? Temperature {
+                temperature.value = value
+                newOrUpdatedTemperatures.append(temperature)
+            } else {
+                let temperature = Temperature(context: context)
+                temperature.kind = kind
+                temperature.value = value
+                newOrUpdatedTemperatures.append(temperature)
+                toAddTemperatures.add(temperature)
             }
         }
+        if let temperatures = object.temperatures {
+            let toRemoveTemperatures = NSMutableSet()
+            for temperature in temperatures {
+                let temperature = temperature as! Temperature
+                if let _ = newOrUpdatedTemperatures.first(where: { $0.kind == temperature.kind }) {} else {
+                    toRemoveTemperatures.add(temperature)
+                }
+            }
+            object.removeFromTemperatures(toRemoveTemperatures)
+        }
+        object.addToTemperatures(toAddTemperatures)
     }
 }
